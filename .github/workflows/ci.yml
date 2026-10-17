@@ -151,6 +151,9 @@ jobs:
                       name = a.get("suggestedHumanReadableName", f).split("_")[0]
                       subprocess.run(["sips", "-Z", "1200", f, "--out", f"{out}/{name}.png"], capture_output=True)
           PY
+          # Also publish the generated Xcode project so it can be committed (no XcodeGen needed to open it).
+          cp -R "$GITHUB_WORKSPACE/ios/Present.xcodeproj" "$RUNNER_TEMP/shots/Present.xcodeproj"
+          xcodebuild -version > "$RUNNER_TEMP/shots/xcode-version.txt"
           cd "$RUNNER_TEMP/shots" && ls
           git init -q && git checkout -q -b ci-screenshots
           git -c user.name="present-ci" -c user.email="ci@users.noreply.github.com" add -A
