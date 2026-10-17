@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   server:
@@ -48,6 +48,9 @@ jobs:
 
   ios:
     name: iOS build, unit + UI tests (simulator)
+    # macOS minutes count 10x against the free quota, so run this on PRs, manual runs
+    # and pushes whose commit message doesn't contain [skip ios].
+    if: ${{ !contains(github.event.head_commit.message, '[skip ios]') }}
     runs-on: macos-15
     timeout-minutes: 75
     env:
