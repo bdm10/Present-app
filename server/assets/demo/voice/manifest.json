@@ -1,0 +1,16 @@
+{
+  "engine": "Piper (offline, open source) with the en_US-libritts-high model",
+  "license": "Piper is MIT licensed; the LibriTTS-based voice model is CC BY 4.0.",
+  "voices": [
+    {
+      "id": "demo-wren",
+      "name": "Wren (demo voice)",
+      "description": "Soft, unhurried. Offline sample voice, not ElevenLabs"
+    },
+    {
+      "id": "demo-rowan",
+      "name": "Rowan (demo voice)",
+      "description": "Low and steady. Offline sample voice, not ElevenLabs"
+    }
+  ]
+}

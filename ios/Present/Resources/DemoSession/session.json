@@ -1,0 +1,86 @@
+{
+  "id": "demo_arriving",
+  "kind": "on_demand",
+  "localDate": "2026-10-17",
+  "createdAt": "2026-10-17T07:00:00.000Z",
+  "status": "ready",
+  "statusDetail": null,
+  "theme": "presence",
+  "durationMinutes": 5,
+  "title": "The Weight of Here",
+  "summary": "Settling into the body and the sounds around you, one moment at a time.",
+  "reflectionQuestion": "Where in your day today could you stop for three breaths?",
+  "durationSeconds": 300,
+  "favorite": false,
+  "demo": true,
+  "providers": {
+    "script": "demo:prewritten",
+    "voice": "demo:piper:demo-wren",
+    "music": "builtin-linen"
+  },
+  "voiceName": "Wren (demo voice)",
+  "musicTitle": "Linen",
+  "audio": null,
+  "transcript": [
+    {
+      "text": "Before anything else, notice that you've stopped. Whatever came before this can wait a few minutes.",
+      "startSeconds": 6
+    },
+    {
+      "text": "Let your body settle into whatever is holding it. The chair, the floor, the bed. Let it take a little more of your weight.",
+      "startSeconds": 16.5
+    },
+    {
+      "text": "Breathe in through your nose, a little slower than usual. And let the breath go, without pushing it out.",
+      "startSeconds": 31.6
+    },
+    {
+      "text": "Now let the breath do whatever it wants. You don't need to manage it.",
+      "startSeconds": 44.9
+    },
+    {
+      "text": "Notice where your hands are. Feel their weight. Maybe the temperature of the air on the backs of them.",
+      "startSeconds": 59.2
+    },
+    {
+      "text": "Notice your feet. Whether they're touching the ground, or a blanket, or each other.",
+      "startSeconds": 78
+    },
+    {
+      "text": "Now listen. Start with the sounds furthest away. Traffic, wind, a distant voice, or just the hum of the building.",
+      "startSeconds": 93.3
+    },
+    {
+      "text": "Then the sounds in the room. And then the quietest sound you can find. Perhaps your own breathing.",
+      "startSeconds": 117.6
+    },
+    {
+      "text": "Thoughts will come too. A list, a conversation, something you forgot. That's not a mistake.",
+      "startSeconds": 142.3
+    },
+    {
+      "text": "When you notice you've drifted, that moment of noticing is the practice. Just come back to the feeling of sitting here.",
+      "startSeconds": 152.5
+    },
+    {
+      "text": "For the next little while, there's nothing to do but be here. If your attention wanders, bring it home to your body, as often as you need.",
+      "startSeconds": 186.7
+    },
+    {
+      "text": "Begin to let a little movement come back. Perhaps your fingers, or a slow roll of the shoulders.",
+      "startSeconds": 244.5
+    },
+    {
+      "text": "As you go into your day, see if you can find one moment to stop like this again, even for three breaths.",
+      "startSeconds": 258.5
+    },
+    {
+      "text": "Waiting for the kettle. Standing at a door. Before you answer a message.",
+      "startSeconds": 271.7
+    },
+    {
+      "text": "Whenever you're ready, open your eyes, and arrive.",
+      "startSeconds": 282.8
+    }
+  ]
+}
