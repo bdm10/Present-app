@@ -65,6 +65,7 @@ jobs:
       - name: Tools
         run: |
           brew install xcodegen ffmpeg
+          which ffmpeg ffprobe xcodegen
           xcodebuild -version
       - name: Start backend (demo mode) for the UI tests
         working-directory: server
@@ -75,6 +76,17 @@ jobs:
           DATA_DIR="$RUNNER_TEMP/present-data" APP_TOKEN="$PRESENT_TOKEN" PORT=8787 \
             nohup node --disable-warning=ExperimentalWarning dist/main.js > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 30); do curl -sf localhost:8787/health && break; sleep 1; done
+      - name: Backend smoke test on macOS (generate one demo session)
+        run: |
+          H="Authorization: Bearer $PRESENT_TOKEN"
+          ID=$(curl -sf -XPOST localhost:8787/api/sessions -H "$H" -H 'content-type: application/json' \
+               -d '{"theme":"presence","durationMinutes":5}' | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          for i in $(seq 1 60); do
+            S=$(curl -sf localhost:8787/api/sessions/$ID -H "$H" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["status"], "|", d["statusDetail"])')
+            echo "$S"; case "$S" in ready*|failed*) break;; esac; sleep 3
+          done
+          grep -E '"level":(40|50)' "$RUNNER_TEMP/server.log" | tail -20 || true
+          case "$S" in ready*) ;; *) exit 1;; esac
       - name: Generate Xcode project
         working-directory: ios
         run: xcodegen generate
@@ -113,9 +125,31 @@ jobs:
           mkdir -p "$RUNNER_TEMP/screenshots"
           xcrun xcresulttool export attachments --path "$RUNNER_TEMP/Present.xcresult" --output-path "$RUNNER_TEMP/screenshots" || true
           ls -la "$RUNNER_TEMP/screenshots" || true
-      - name: Compile errors (if any)
-        if: failure()
-        run: grep -E "error:" "$RUNNER_TEMP/xcodebuild.log" | sort -u | head -80 || true
+      - name: Test summary
+        if: always()
+        run: |
+          grep -E "error:" "$RUNNER_TEMP/xcodebuild.log" | sort -u | head -80 || true
+          grep -E "Test Case .*(passed|failed|skipped)" "$RUNNER_TEMP/xcodebuild.log" | sed -E 's/.*Test Case//' || true
+          grep -E '"level":(40|50)' "$RUNNER_TEMP/server.log" | tail -20 || true
+      - name: Print screenshots (small JPEG, base64) for remote review
+        if: always()
+        run: |
+          cd "$RUNNER_TEMP/screenshots" 2>/dev/null || exit 0
+          python3 - <<'PY'
+          import json, subprocess, base64, os
+          try:
+              manifest = json.load(open("manifest.json"))
+          except Exception:
+              raise SystemExit(0)
+          for test in manifest:
+              for a in test.get("attachments", []):
+                  f = a.get("exportedFileName", "")
+                  if not f.endswith(".png"):
+                      continue
+                  name = a.get("suggestedHumanReadableName", f).split("_")[0]
+                  subprocess.run(["sips", "-Z", "700", "-s", "format", "jpeg", "-s", "formatOptions", "60", f, "--out", "s.jpg"], capture_output=True)
+                  print(f"SCREENSHOT {name} " + base64.b64encode(open("s.jpg", "rb").read()).decode())
+          PY
       - name: Server log tail
         if: always()
         run: tail -40 "$RUNNER_TEMP/server.log" || true
