@@ -16,6 +16,7 @@ struct ReflectionView: View {
     var onDone: () -> Void
 
     private var question: String { session.fallbackReflectionQuestion }
+    private var isEmpty: Bool { text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
         ScrollView {
@@ -45,7 +46,7 @@ struct ReflectionView: View {
                         .foregroundStyle(Palette.ink)
                         .scrollContentBackground(.hidden)
                         .focused($editorFocused)
-                        .frame(minHeight: 180)
+                        .frame(minHeight: 140)
                         .accessibilityIdentifier("journalEditor")
                 }
                 .padding(14)
@@ -61,30 +62,35 @@ struct ReflectionView: View {
                 Label("Private. Stored only on this iPhone and never sent anywhere.", systemImage: "lock")
                     .font(Typography.caption)
                     .foregroundStyle(Palette.secondaryInk)
-
-                VStack(spacing: 6) {
-                    Button("Save") {
-                        model.journal.add(sessionId: session.id,
-                                          sessionTitle: session.displayTitle,
-                                          question: question,
-                                          text: text)
-                        onDone()
-                    }
-                    .buttonStyle(SoftCapsuleButtonStyle())
-                    .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    .opacity(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
-                    .accessibilityIdentifier("saveReflectionButton")
-
-                    Button(mode == .afterSession ? "Just sit with it" : "Close") {
-                        onDone()
-                    }
-                    .buttonStyle(QuietButtonStyle())
-                    .accessibilityIdentifier("skipReflectionButton")
-                }
-                .padding(.top, 4)
             }
             .padding(.horizontal, 24)
-            .padding(.bottom, 32)
+            .padding(.bottom, 24)
+        }
+        // The buttons sit in a bar that stays above the keyboard, so Save is always reachable.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 6) {
+                Button("Save") {
+                    model.journal.add(sessionId: session.id,
+                                      sessionTitle: session.displayTitle,
+                                      question: question,
+                                      text: text)
+                    onDone()
+                }
+                .buttonStyle(SoftCapsuleButtonStyle())
+                .disabled(isEmpty)
+                .opacity(isEmpty ? 0.5 : 1)
+                .accessibilityIdentifier("saveReflectionButton")
+
+                Button(mode == .afterSession ? "Just sit with it" : "Close") {
+                    onDone()
+                }
+                .buttonStyle(QuietButtonStyle())
+                .accessibilityIdentifier("skipReflectionButton")
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            .background(Palette.background.opacity(0.96))
         }
         .scrollDismissesKeyboard(.interactively)
         .presentBackground()

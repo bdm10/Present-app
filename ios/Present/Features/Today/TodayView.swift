@@ -137,6 +137,9 @@ private struct ReadySessionView: View {
                     .font(Typography.display)
                     .foregroundStyle(Palette.ink)
                     .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, 8)
                     .accessibilityIdentifier("todayTitle")
                 if let summary = session.summary {
                     Text(summary)

@@ -34,6 +34,23 @@ struct PresentApp: App {
     @State private var model = AppModel.shared
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // Navigation titles ("Library", "Settings") in the same serif as the rest of the app.
+        let ink = UIColor(Palette.ink)
+        func serif(_ style: UIFont.TextStyle) -> UIFont {
+            let base = UIFont.preferredFont(forTextStyle: style)
+            let descriptor = base.fontDescriptor.withDesign(.serif) ?? base.fontDescriptor
+            return UIFont(descriptor: descriptor, size: base.pointSize)
+        }
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.largeTitleTextAttributes = [.font: serif(.largeTitle), .foregroundColor: ink]
+        appearance.titleTextAttributes = [.font: serif(.headline), .foregroundColor: ink]
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

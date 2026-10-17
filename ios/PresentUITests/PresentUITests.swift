@@ -146,30 +146,31 @@ final class ServerFlowUITests: XCTestCase {
         editor.typeText(note)
         snapshot(app, "12-reflection")
         app.buttons["saveReflectionButton"].tap()
+        let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.element("reflectionView"))
+        wait(for: [closed], timeout: 10)
+        sleep(1) // let the finished session's mini player go away
 
-        // Library: the session is listed; favourite it.
+        // Library: open this session (the server may also have made today's daily one),
+        // favourite it from its detail page, and check the private journal entry is there.
         app.tabBars.buttons["Library"].tap()
-        XCTAssertTrue(app.buttons["favoriteButton"].waitForExistence(timeout: 10))
         let row = app.text(containing: title)
-        XCTAssertTrue(row.waitForExistence(timeout: 10))
-        let heart = app.buttons["favoriteButton"]
-        XCTAssertTrue(heart.waitForExistence(timeout: 5))
-        heart.tap()
-
-        app.segmentedControls.buttons["Favourites"].tap()
-        XCTAssertTrue(app.buttons["favoriteButton"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.text(containing: title).waitForExistence(timeout: 10), "Favourited session appears in Favourites")
-        snapshot(app, "13-library-favourites")
-
-        // Open the session and see the private journal entry.
-        app.text(containing: title).tap()
-        XCTAssertTrue(app.buttons["detailFavoriteButton"].waitForExistence(timeout: 10))
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "Session should be listed in the Library")
+        row.tap()
+        let detailHeart = app.buttons["detailFavoriteButton"]
+        XCTAssertTrue(detailHeart.waitForExistence(timeout: 10))
+        detailHeart.tap()
         let entry = app.text(containing: note)
         if !entry.waitForExistence(timeout: 5) {
             app.swipeUp()
         }
         XCTAssertTrue(entry.waitForExistence(timeout: 5), "Journal entry should show on the session")
-        snapshot(app, "14-session-detail")
+        snapshot(app, "13-session-detail")
+
+        // Back to the list: the session now appears under Favourites.
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.segmentedControls.buttons["Favourites"].tap()
+        XCTAssertTrue(app.text(containing: title).waitForExistence(timeout: 10), "Favourited session appears in Favourites")
+        snapshot(app, "14-library-favourites")
 
         app.tabBars.buttons["Settings"].tap()
         sleep(2)
