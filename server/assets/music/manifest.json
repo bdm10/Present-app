@@ -1,0 +1,31 @@
+{
+  "tracks": [
+    {
+      "slug": "linen",
+      "title": "Linen",
+      "file": "linen.m4a",
+      "durationSeconds": 180.0,
+      "loudnessLufs": -15.2,
+      "mood": "calm",
+      "license": "Original ambient music made for Present. CC0 (public domain)."
+    },
+    {
+      "slug": "low-tide",
+      "title": "Low Tide",
+      "file": "low-tide.m4a",
+      "durationSeconds": 180.0,
+      "loudnessLufs": -15.2,
+      "mood": "sleep",
+      "license": "Original ambient music made for Present. CC0 (public domain)."
+    },
+    {
+      "slug": "morning-field",
+      "title": "Morning Field",
+      "file": "morning-field.m4a",
+      "durationSeconds": 180.0,
+      "loudnessLufs": -16.4,
+      "mood": "bright",
+      "license": "Original ambient music made for Present. CC0 (public domain)."
+    }
+  ]
+}

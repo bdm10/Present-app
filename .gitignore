@@ -1,0 +1,6 @@
+# Xcode
+ios/Present.xcodeproj/
+ios/build/
+DerivedData/
+xcuserdata/
+.DS_Store

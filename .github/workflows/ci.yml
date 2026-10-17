@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t present-server server
+      - name: Smoke test the container
+        run: |
+          docker run -d --name present -p 8787:8787 -e APP_TOKEN=ci-container-token-123456 present-server
+          for i in $(seq 1 30); do curl -sf localhost:8787/health && break; sleep 1; done
+          curl -sf -H "Authorization: Bearer ci-container-token-123456" localhost:8787/api/status
+          docker logs present | tail -5
+
+  ios:
+    name: iOS build, unit + UI tests (simulator)
+    runs-on: macos-15
+    timeout-minutes: 75
+    env:
+      PRESENT_TOKEN: ci-ui-test-token-1234567890
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Tools
+        run: |
+          brew install xcodegen ffmpeg
+          xcodebuild -version
+      - name: Start backend (demo mode) for the UI tests
+        working-directory: server
+        run: |
+          npm ci
+          npm run build
+          mkdir -p "$RUNNER_TEMP/present-data"
+          DATA_DIR="$RUNNER_TEMP/present-data" APP_TOKEN="$PRESENT_TOKEN" PORT=8787 \
+            nohup node --disable-warning=ExperimentalWarning dist/main.js > "$RUNNER_TEMP/server.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:8787/health && break; sleep 1; done
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+      - name: Pick simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)["devices"]
+          runtimes = sorted((r for r in data if "iOS" in r), key=lambda r: [int(x) for x in r.split("iOS-")[-1].split("-")])
+          for rt in reversed(runtimes):
+              phones = [d for d in data[rt] if d["name"].startswith("iPhone")]
+              if phones:
+                  pref = [d for d in phones if "Pro" not in d["name"] and "Plus" not in d["name"]] or phones
+                  print(pref[0]["udid"]); break
+          ')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices available | grep "$UDID"
+          xcrun simctl boot "$UDID" || true
+      - name: Build and test
+        working-directory: ios
+        env:
+          TEST_RUNNER_PRESENT_TEST_SERVER_URL: http://localhost:8787
+          TEST_RUNNER_PRESENT_TEST_TOKEN: ${{ env.PRESENT_TOKEN }}
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project Present.xcodeproj -scheme Present \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -resultBundlePath "$RUNNER_TEMP/Present.xcresult" \
+            | tee "$RUNNER_TEMP/xcodebuild.log" | grep -E "error:|warning: unre|Test Case|Executed|\*\* TEST|Testing failed|failed" || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/xcodebuild.log"
+      - name: Export screenshots
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/screenshots"
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/Present.xcresult" --output-path "$RUNNER_TEMP/screenshots" || true
+          ls -la "$RUNNER_TEMP/screenshots" || true
+      - name: Compile errors (if any)
+        if: failure()
+        run: grep -E "error:" "$RUNNER_TEMP/xcodebuild.log" | sort -u | head -80 || true
+      - name: Server log tail
+        if: always()
+        run: tail -40 "$RUNNER_TEMP/server.log" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-test-results
+          path: |
+            ${{ runner.temp }}/screenshots
+            ${{ runner.temp }}/xcodebuild.log
+            ${{ runner.temp }}/server.log
+          retention-days: 7
