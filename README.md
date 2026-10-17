@@ -6,6 +6,8 @@ A personal meditation app for iPhone. Each morning a new guided meditation is re
 - **Lengths:** 5, 10, 15 or 20 minutes. The audio is *exactly* that long.
 - **Today · Library · Settings.** No streaks, no clutter.
 
+![Present screens](docs/screenshots/overview.jpg)
+
 | | |
 |---|---|
 | `ios/` | Native SwiftUI iPhone app (iOS 17+). Two-stem player (voice and music with independent volumes), background and lock-screen playback, offline downloads, on-device journal, voice previews, Suno uploads. |
@@ -14,7 +16,8 @@ A personal meditation app for iPhone. Each morning a new guided meditation is re
 | `docs/COSTS.md` | Verified pricing and monthly estimates (≈ $15/month for daily 10-minute sessions) |
 | `docs/API.md` | Backend API contract |
 | `docs/TESTING.md` | What was tested, how, and what wasn't |
-| **`SETUP.md`** | **Start here:** run the backend, install on your iPhone, connect |
+| **`docs/IPHONE-DEMO.md`** | **Start here:** install the built-in demo on your iPhone, step by step |
+| `SETUP.md` | Run the backend, deploy it, connect the app, push notifications, TestFlight |
 
 ## How a session is made
 
@@ -41,7 +44,7 @@ The app also bundles a 5-minute demo session that plays with no server at all. N
 ## Quick start (Mac)
 ```bash
 cd server && cp .env.example .env && npm install && npm run dev     # backend in demo mode
-brew install xcodegen && cd ../ios && xcodegen generate && open Present.xcodeproj
+open ../ios/Present.xcodeproj                                          # then pick your team and press Run
 ```
 Then follow [SETUP.md](SETUP.md) to put it on your iPhone and deploy the backend so it runs while your Mac sleeps.
 

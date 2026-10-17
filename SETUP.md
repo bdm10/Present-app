@@ -3,7 +3,7 @@
 Three parts: **(1)** run the backend, **(2)** install the app on your iPhone, **(3)** connect them. Everything works in demo mode first, so you can try it before adding any API keys.
 
 What you need:
-- A Mac with **Xcode 16 or newer** (free from the App Store) and Homebrew. You can install without a Mac via TestFlight (§2C), but that needs a paid Apple Developer account and some one-time setup.
+- A Mac with **Xcode** (free from the App Store). Xcode 27.1 needs macOS Tahoe 26.6+; an iPhone on iOS 27 needs Xcode 27. Homebrew is only needed to run the backend on your Mac. You can install without a Mac via TestFlight (§2C), but that needs a paid Apple Developer account and some one-time setup.
 - An iPhone on **iOS 17+**.
 - Optional, for real sessions: an **Anthropic API key** (console.anthropic.com) and an **ElevenLabs API key** (elevenlabs.io → Developers → API keys).
 
@@ -49,11 +49,9 @@ All settings are documented in [`server/.env.example`](server/.env.example).
 
 ## 2. Install the app on your iPhone
 
-First, once on your Mac:
-```bash
-brew install xcodegen
-cd ios && xcodegen generate && open Present.xcodeproj
-```
+**Simplest path: start with the built-in demo.** The step-by-step guide, including the compatibility checks, is in [`docs/IPHONE-DEMO.md`](docs/IPHONE-DEMO.md).
+
+Open `ios/Present.xcodeproj` in Xcode. The project file is committed, so no extra tools are needed. If you change `ios/project.yml`, regenerate it with `brew install xcodegen && cd ios && xcodegen generate`.
 
 ### A. Free Apple ID (no cost; re-install every 7 days)
 1. In Xcode, select the **Present** target → **Signing & Capabilities** → tick *Automatically manage signing* and choose your **Personal Team** (add your Apple ID in Xcode → Settings → Accounts if needed).

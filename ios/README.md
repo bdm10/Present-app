@@ -18,18 +18,11 @@ ios/
   PresentUITests/          UI tests (demo flow; full server flow when a server is given)
 ```
 
-## 1. Generate the Xcode project
+## 1. Open the Xcode project
 
-You need a Mac with Xcode 16 or later.
+Open `ios/Present.xcodeproj`. For compatibility and step-by-step device setup, see [`../docs/IPHONE-DEMO.md`](../docs/IPHONE-DEMO.md).
 
-```bash
-brew install xcodegen
-cd ios
-xcodegen generate
-open Present.xcodeproj
-```
-
-Run `xcodegen generate` again whenever files are added or `project.yml` changes. The generated `.xcodeproj` isn't committed.
+The project is generated from `project.yml` with XcodeGen. CI regenerates it on every run, and the generated copy is committed so you don't need XcodeGen to open it. After changing `project.yml` or adding files, regenerate it with `brew install xcodegen && xcodegen generate`.
 
 ## 2. Run it on your iPhone with a free Apple ID
 
