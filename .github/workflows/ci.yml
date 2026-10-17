@@ -48,6 +48,8 @@ jobs:
 
   ios:
     name: iOS build, unit + UI tests (simulator)
+    permissions:
+      contents: write   # only to publish UI-test screenshots to the ci-screenshots branch
     # macOS minutes count 10x against the free quota, so run this on PRs, manual runs
     # and pushes whose commit message doesn't contain [skip ios].
     if: ${{ !contains(github.event.head_commit.message, '[skip ios]') }}
@@ -131,25 +133,29 @@ jobs:
           grep -E "error:" "$RUNNER_TEMP/xcodebuild.log" | sort -u | head -80 || true
           grep -E "Test Case .*(passed|failed|skipped)" "$RUNNER_TEMP/xcodebuild.log" | sed -E 's/.*Test Case//' || true
           grep -E '"level":(40|50)' "$RUNNER_TEMP/server.log" | tail -20 || true
-      - name: Print screenshots (small JPEG, base64) for remote review
-        if: always()
+      - name: Publish screenshots to the ci-screenshots branch
+        if: always() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           cd "$RUNNER_TEMP/screenshots" 2>/dev/null || exit 0
-          python3 - <<'PY'
-          import json, subprocess, base64, os
-          try:
-              manifest = json.load(open("manifest.json"))
-          except Exception:
-              raise SystemExit(0)
-          for test in manifest:
+          [ -f manifest.json ] || exit 0
+          mkdir -p "$RUNNER_TEMP/shots"
+          python3 - "$RUNNER_TEMP/shots" <<'PY'
+          import json, subprocess, sys
+          out = sys.argv[1]
+          for test in json.load(open("manifest.json")):
               for a in test.get("attachments", []):
                   f = a.get("exportedFileName", "")
-                  if not f.endswith(".png"):
-                      continue
-                  name = a.get("suggestedHumanReadableName", f).split("_")[0]
-                  subprocess.run(["sips", "-Z", "700", "-s", "format", "jpeg", "-s", "formatOptions", "60", f, "--out", "s.jpg"], capture_output=True)
-                  print(f"SCREENSHOT {name} " + base64.b64encode(open("s.jpg", "rb").read()).decode())
+                  if f.endswith(".png"):
+                      name = a.get("suggestedHumanReadableName", f).split("_")[0]
+                      subprocess.run(["sips", "-Z", "1200", f, "--out", f"{out}/{name}.png"], capture_output=True)
           PY
+          cd "$RUNNER_TEMP/shots" && ls
+          git init -q && git checkout -q -b ci-screenshots
+          git -c user.name="present-ci" -c user.email="ci@users.noreply.github.com" add -A
+          git -c user.name="present-ci" -c user.email="ci@users.noreply.github.com" commit -qm "Screenshots for ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-screenshots
       - name: Server log tail
         if: always()
         run: tail -40 "$RUNNER_TEMP/server.log" || true
