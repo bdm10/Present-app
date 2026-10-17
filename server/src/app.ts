@@ -229,6 +229,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     const row = loadSession(req.params);
     const { stem } = z.object({ stem: z.enum(["voice.m4a", "music.m4a"]) }).parse({ stem: (req.params as { stem: string }).stem });
     if (row.status !== "ready") throw new HttpError(404, "not_found", "Audio isn't ready yet");
+    if (row.audio_archived) throw new HttpError(404, "not_found", "This session's audio has been archived on the server");
     return sendFile(req, reply, path.join(sessionDir(cfg.dataDir, row.id), stem), "audio/mp4");
   });
 

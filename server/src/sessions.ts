@@ -27,6 +27,8 @@ export interface ApiSession {
   durationSeconds: number | null;
   favorite: boolean;
   demo: boolean;
+  /** Audio removed from the server by the retention policy (copies on the phone still play). */
+  archived: boolean;
   providers: { script: string; voice: string; music: string } | null;
   voiceName: string | null;
   musicTitle: string | null;
@@ -35,7 +37,7 @@ export interface ApiSession {
 }
 
 export function toApi(row: SessionRow): ApiSession {
-  const ready = row.status === "ready";
+  const ready = row.status === "ready" && !row.audio_archived;
   return {
     id: row.id,
     kind: row.kind,
@@ -51,6 +53,7 @@ export function toApi(row: SessionRow): ApiSession {
     durationSeconds: row.duration_seconds,
     favorite: !!row.favorite,
     demo: !!row.demo,
+    archived: !!row.audio_archived,
     providers: row.providers ? JSON.parse(row.providers) : null,
     voiceName: row.voice_name,
     musicTitle: row.music_title,
@@ -62,7 +65,7 @@ export function toApi(row: SessionRow): ApiSession {
           musicBytes: row.music_bytes ?? 0,
         }
       : null,
-    transcript: ready && row.transcript ? JSON.parse(row.transcript) : null,
+    transcript: row.status === "ready" && row.transcript ? JSON.parse(row.transcript) : null,
   };
 }
 
@@ -123,4 +126,23 @@ export function deleteSession(db: DB, dataDir: string, id: string): boolean {
   const res = db.prepare("DELETE FROM sessions WHERE id = ?").run(id);
   fs.rmSync(sessionDir(dataDir, id), { recursive: true, force: true });
   return res.changes > 0;
+}
+
+/**
+ * Frees disk space: removes the audio of sessions older than `days` (favourites are kept).
+ * The record, transcript and reflection question stay, and the app keeps its own downloads.
+ */
+export function archiveOldAudio(db: DB, dataDir: string, days: number): number {
+  if (days <= 0) return 0;
+  const cutoff = new Date(Date.now() - days * 86_400_000).toISOString();
+  const rows = db
+    .prepare("SELECT id FROM sessions WHERE status = 'ready' AND favorite = 0 AND audio_archived = 0 AND created_at < ?")
+    .all(cutoff) as { id: string }[];
+  for (const { id } of rows) {
+    const dir = sessionDir(dataDir, id);
+    fs.rmSync(path.join(dir, "voice.m4a"), { force: true });
+    fs.rmSync(path.join(dir, "music.m4a"), { force: true });
+    db.prepare("UPDATE sessions SET audio_archived = 1 WHERE id = ?").run(id);
+  }
+  return rows.length;
 }

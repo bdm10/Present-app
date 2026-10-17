@@ -241,7 +241,8 @@ final class AppModel {
 
     private func syncTimeZone(_ current: UserSettings) async {
         let deviceZone = TimeZone.current.identifier
-        guard current.timeZone != deviceZone else { return }
+        let savedHere = LocalSettings.settingsSavedFor != nil && LocalSettings.settingsSavedFor == LocalSettings.serverURL
+        guard current.timeZone != deviceZone || !savedHere else { return }
         await updateSettings { $0.timeZone = deviceZone }
     }
 
@@ -382,6 +383,10 @@ final class AppModel {
                 musicURL = m
             } else {
                 if !downloads.isDownloaded(session) {
+                    if session.archived == true {
+                        errorMessage = "This session's audio is no longer kept on the server. Favourite sessions you want to keep, or download them."
+                        return
+                    }
                     guard let api else { throw APIError.offline }
                     preparingSessionID = session.id
                     defer { preparingSessionID = nil }
@@ -495,6 +500,7 @@ final class AppModel {
         settings = updated
         do {
             settings = try await api.updateSettings(updated)
+            LocalSettings.settingsSavedFor = LocalSettings.serverURL
             status = try? await api.status()
             if let refreshed = try? await api.today() {
                 nextDailyAt = ISODate.parse(refreshed.nextDailyAt)

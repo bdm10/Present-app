@@ -3,7 +3,7 @@ import type { Config } from "./config.js";
 import { DB, SessionRow, kvGet, nowIso, type Theme } from "./db.js";
 import type { JobRunner } from "./jobs.js";
 import type { Notifier } from "./push/apns.js";
-import { createSessionWithJob, dailySessionFor } from "./sessions.js";
+import { archiveOldAudio, createSessionWithJob, dailySessionFor } from "./sessions.js";
 import { getSettings, type Settings } from "./settings.js";
 
 export interface DailyWindow {
@@ -56,6 +56,7 @@ export function nextTheme(db: DB, themes: Theme[]): Theme {
 
 export class Scheduler {
   private timer: NodeJS.Timeout | null = null;
+  private lastCleanup = 0;
   lastError: string | null = null;
 
   constructor(
@@ -88,6 +89,11 @@ export class Scheduler {
     let created: SessionRow | null = null;
     let notified = false;
     try {
+      if (Date.now() - this.lastCleanup > 60 * 60 * 1000) {
+        this.lastCleanup = Date.now();
+        archiveOldAudio(this.db, this.cfg.dataDir, this.cfg.audioRetentionDays);
+      }
+
       // Until the app has saved settings (including the phone's time zone), we don't know
       // when "morning" is, so nothing is scheduled.
       if (!kvGet(this.db, "settings")) return { created, notified };

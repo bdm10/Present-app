@@ -97,6 +97,8 @@ struct Session: Codable, Identifiable, Hashable {
     var durationSeconds: Double?
     var favorite: Bool
     var demo: Bool
+    /// The server removed this session's audio to save space (copies on the phone still play).
+    var archived: Bool?
     var providers: SessionProviders?
     var voiceName: String?
     var musicTitle: String?

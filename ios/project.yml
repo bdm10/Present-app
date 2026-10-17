@@ -49,6 +49,7 @@ targets:
         BGTaskSchedulerPermittedIdentifiers:
           - com.present.meditation.refresh
         NSFaceIDUsageDescription: Present uses Face ID to keep your private journal locked.
+        NSLocalNetworkUsageDescription: Present connects to your own Present server when it runs on your local network.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         ITSAppUsesNonExemptEncryption: false

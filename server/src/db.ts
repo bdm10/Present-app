@@ -52,6 +52,7 @@ export interface SessionRow {
   ready_at: string | null;
   notified_at: string | null;
   cost_usd: number;
+  audio_archived: number;
 }
 
 export interface JobRow {
@@ -112,7 +113,8 @@ CREATE TABLE IF NOT EXISTS sessions (
   error TEXT,
   ready_at TEXT,
   notified_at TEXT,
-  cost_usd REAL NOT NULL DEFAULT 0
+  cost_usd REAL NOT NULL DEFAULT 0,
+  audio_archived INTEGER NOT NULL DEFAULT 0
 );
 -- Exactly one daily session per local date: the core duplicate-prevention guarantee.
 CREATE UNIQUE INDEX IF NOT EXISTS sessions_one_daily_per_day ON sessions(local_date) WHERE kind = 'daily';

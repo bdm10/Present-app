@@ -14,6 +14,7 @@ enum LocalSettings {
         static let demoFavorite = "present.demoFavorite"
         static let localReminder = "present.localReminder"
         static let lastRegisteredPushToken = "present.lastPushToken"
+        static let settingsSavedFor = "present.settingsSavedFor"
     }
 
     static let tokenAccount = "serverToken"
@@ -58,13 +59,20 @@ enum LocalSettings {
         set { defaults.set(newValue, forKey: Key.lastRegisteredPushToken) }
     }
 
+    /// The server URL we've saved settings to at least once. The server doesn't schedule
+    /// daily sessions until the app has told it the phone's time zone.
+    static var settingsSavedFor: String? {
+        get { defaults.string(forKey: Key.settingsSavedFor) }
+        set { defaults.set(newValue, forKey: Key.settingsSavedFor) }
+    }
+
     /// Removes every preference this app has written.
     static func reset() {
         if let bundleID = Bundle.main.bundleIdentifier {
             defaults.removePersistentDomain(forName: bundleID)
         }
         for key in [Key.connection, Key.serverURL, Key.voiceVolume, Key.musicVolume, Key.journalLock,
-                    Key.demoFavorite, Key.localReminder, Key.lastRegisteredPushToken] {
+                    Key.demoFavorite, Key.localReminder, Key.lastRegisteredPushToken, Key.settingsSavedFor] {
             defaults.removeObject(forKey: key)
         }
         Keychain.delete(tokenAccount)

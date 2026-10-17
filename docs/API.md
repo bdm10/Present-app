@@ -32,6 +32,7 @@ interface Session {
   durationSeconds: number | null;// exact length of both stems
   favorite: boolean;
   demo: boolean;                 // true if ANY part used demo providers
+  archived: boolean;             // audio removed from server by retention (AUDIO_RETENTION_DAYS); audio = null
   providers: { script: string; voice: string; music: string } | null; // e.g. {script:"anthropic:claude-sonnet-…", voice:"elevenlabs:eleven_v3:<voiceId>", music:"builtin:warm-pad"}
   voiceName: string | null;
   musicTitle: string | null;

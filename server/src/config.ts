@@ -51,6 +51,7 @@ export interface Config {
   dailyLeadMinutes: number;
   catchUpHours: number;
   maxJobAttempts: number;
+  audioRetentionDays: number;
 
   apnsKeyId: string;
   apnsTeamId: string;
@@ -126,6 +127,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       dailyLeadMinutes: num("DAILY_LEAD_MINUTES", 30),
       catchUpHours: num("CATCH_UP_HOURS", 12),
       maxJobAttempts: num("MAX_JOB_ATTEMPTS", 4),
+      audioRetentionDays: num("AUDIO_RETENTION_DAYS", 60),
 
       apnsKeyId: str("APNS_KEY_ID"),
       apnsTeamId: str("APNS_TEAM_ID"),

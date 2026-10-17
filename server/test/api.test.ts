@@ -232,3 +232,23 @@ describe("devices and data deletion", () => {
     expect((await app.inject({ url: "/api/music", headers: auth })).json().tracks).toHaveLength(3);
   });
 });
+
+describe("audio retention", () => {
+  it("archives old non-favourite audio but keeps favourites and the record", { timeout: 200_000 }, async () => {
+    const { app, runner, db, cfg } = await makeApp();
+    const a = (await app.inject({ method: "POST", url: "/api/sessions", headers: auth, payload: { durationMinutes: 5, theme: "presence" } })).json();
+    const b = (await app.inject({ method: "POST", url: "/api/sessions", headers: auth, payload: { durationMinutes: 5, theme: "presence" } })).json();
+    await runner.drain();
+    await app.inject({ method: "PATCH", url: `/api/sessions/${b.id}`, headers: auth, payload: { favorite: true } });
+    db.prepare("UPDATE sessions SET created_at = ?").run(new Date(Date.now() - 90 * 86_400_000).toISOString());
+    const { archiveOldAudio } = await import("../src/sessions.js");
+    expect(archiveOldAudio(db, cfg.dataDir, 60)).toBe(1);
+    const sa = (await app.inject({ url: `/api/sessions/${a.id}`, headers: auth })).json();
+    expect(sa).toMatchObject({ status: "ready", archived: true, audio: null });
+    expect(sa.transcript.length).toBeGreaterThan(0);
+    expect((await app.inject({ url: `/api/sessions/${a.id}/audio/voice.m4a`, headers: auth })).statusCode).toBe(404);
+    const sb = (await app.inject({ url: `/api/sessions/${b.id}`, headers: auth })).json();
+    expect(sb.archived).toBe(false);
+    expect(sb.audio).not.toBeNull();
+  });
+});
