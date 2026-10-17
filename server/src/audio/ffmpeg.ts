@@ -182,17 +182,13 @@ export async function renderMusic(o: MusicRenderOptions): Promise<void> {
       `afade=t=in:st=0:d=${o.fadeIn},afade=t=out:st=${(o.totalSeconds - o.fadeOut).toFixed(3)}:d=${o.fadeOut},` +
       `alimiter=limit=0.7:level=false[m]`,
   );
-  const filterFile = `${o.out}.filter.txt`;
-  fs.writeFileSync(filterFile, parts.join(";\n"));
-  try {
-    await run("ffmpeg", [
-      ...args,
-      "-filter_complex_script", filterFile,
-      "-map", "[m]", "-c:a", "aac", "-aac_coder", "fast", "-b:a", "112k", "-movflags", "+faststart", o.out,
-    ]);
-  } finally {
-    fs.rmSync(filterFile, { force: true });
-  }
+  // The graph is passed inline: -filter_complex_script was deprecated in FFmpeg 7.1 and
+  // removed in 8, and even a 20-minute ducking expression is far below the argument limit.
+  await run("ffmpeg", [
+    ...args,
+    "-filter_complex", parts.join(";"),
+    "-map", "[m]", "-c:a", "aac", "-aac_coder", "fast", "-b:a", "112k", "-movflags", "+faststart", o.out,
+  ]);
 }
 
 /** Normalises an uploaded or generated track into the library format (stereo AAC, 44.1 kHz). */
